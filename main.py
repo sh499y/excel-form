@@ -31,10 +31,12 @@ WYKAZ_KOLUMNY = {
     "vin": 5,
     "rok_prod": 6,
     "pojemnosc": 7,
+    "wartosc_pojazdu": 8,
 }
 
 # Mapowanie pól na kolumny w plikach eksportów.
 EXPORT_KOLUMNY = {
+    "wartosc_pojazdu": 1,
     "nr_rej": 2,
     "marka": 4,
     "typ": 5,
@@ -163,6 +165,9 @@ def pobierz_pojazdy_z_eksportow(eksporty):
                 "vin": str(vin).strip() if vin is not None else None,
                 "rok_prod": pierwsza_niepusta_wartosc(row[EXPORT_KOLUMNY["rok_prod"] - 1]),
                 "pojemnosc": pierwsza_niepusta_wartosc(row[EXPORT_KOLUMNY["pojemnosc"] - 1]),
+                "wartosc_pojazdu": pierwsza_niepusta_wartosc(
+                    row[EXPORT_KOLUMNY["wartosc_pojazdu"] - 1]
+                ),
             })
 
     return pojazdy
@@ -236,6 +241,11 @@ def dodaj_pojazdy_do_wykazu(eksporty):
         main_ws.cell(pierwszy_pusty_wiersz, WYKAZ_KOLUMNY["vin"], pojazd["vin"])
         main_ws.cell(pierwszy_pusty_wiersz, WYKAZ_KOLUMNY["rok_prod"], pojazd["rok_prod"])
         main_ws.cell(pierwszy_pusty_wiersz, WYKAZ_KOLUMNY["pojemnosc"], pojazd["pojemnosc"])
+        main_ws.cell(
+            pierwszy_pusty_wiersz,
+            WYKAZ_KOLUMNY["wartosc_pojazdu"],
+            pojazd["wartosc_pojazdu"],
+        )
 
         # Po dodaniu rekordu od razu dopisuje jego klucze do zbiorów,
         # żeby nie dodać duplikatu z kolejnego pliku eksportu.
@@ -263,7 +273,7 @@ def dodaj_pojazdy_do_wykazu(eksporty):
 Tworzy backup w foldrze Backup
 '''
 def backup():
-    oryginal = "Wykaz.xlsx"
+    oryginal = Wykaz
     backup_dir = "Backup"
 
     # Tworzy folder Backup, jeśli jeszcze nie istnieje.
@@ -283,4 +293,5 @@ if __name__ == '__main__':
     # Najpierw robi backup, potem wczytuje eksporty i dopisuje brakujące pojazdy.
     backup()
     eksporty = wczytaj_eksporty()
+    print(f"Scalanie eksportow do pliku: {Wykaz}")
     dodaj_pojazdy_do_wykazu(eksporty)
