@@ -32,6 +32,8 @@ WYKAZ_KOLUMNY = {
     "rok_prod": 6,
     "pojemnosc": 7,
     "wartosc_pojazdu": 8,
+    "poczatek_polisy": 19,
+    "koniec_polisy": 20,
 }
 
 # Mapowanie pol na kolumny w plikach eksportow
@@ -45,6 +47,8 @@ EXPORT_KOLUMNY = {
     "rok_prod": 9,
     "vin": 11,
     "pojemnosc": 12,
+    "poczatek_polisy": 22,
+    "koniec_polisy": 23,
 }
 
 '''
@@ -168,6 +172,12 @@ def pobierz_pojazdy_z_eksportow(eksporty):
                 "wartosc_pojazdu": pierwsza_niepusta_wartosc(
                     row[EXPORT_KOLUMNY["wartosc_pojazdu"] - 1]
                 ),
+                "poczatek_polisy": pierwsza_niepusta_wartosc(
+                    row[EXPORT_KOLUMNY["poczatek_polisy"] - 1]
+                ),
+                "koniec_polisy": pierwsza_niepusta_wartosc(
+                    row[EXPORT_KOLUMNY["koniec_polisy"] - 1]
+                ),
             })
 
     return pojazdy
@@ -245,6 +255,16 @@ def dodaj_pojazdy_do_wykazu(eksporty):
             pierwszy_pusty_wiersz,
             WYKAZ_KOLUMNY["wartosc_pojazdu"],
             pojazd["wartosc_pojazdu"],
+        )
+        main_ws.cell(
+            pierwszy_pusty_wiersz,
+            WYKAZ_KOLUMNY["poczatek_polisy"],
+            pojazd["poczatek_polisy"],
+        )
+        main_ws.cell(
+            pierwszy_pusty_wiersz,
+            WYKAZ_KOLUMNY["koniec_polisy"],
+            pojazd["koniec_polisy"],
         )
         '''
         Po dodaniu rekordu od razu dopisuje jego klucze do zbiorow
