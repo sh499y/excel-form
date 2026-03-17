@@ -1,7 +1,6 @@
 from openpyxl import load_workbook
 import warnings
 
-import shutil
 from datetime import datetime
 import os
 
@@ -14,15 +13,16 @@ Import Wykaz.xlsx
 '''
 Wykaz = "Wykaz.xlsx"
 Wykaz_SHEET = "Szablon 23.11.0.0"
+FINAL_DIR = "Final"
 
-# Otwiera glowny plik wykazu i wybiera arkusz roboczy.
+# Otwiera glowny plik wykazu i wybiera arkusz roboczy
 main_wb = load_workbook(Wykaz)
 main_ws = main_wb[Wykaz_SHEET]
 
-# Dane w wykazie zaczynaja sie od wiersza 3, bo wyzej sa naglowki.
+# Dane w wykazie zaczynaja sie od wiersza 3, bo wyzej sa naglowki
 WYKAZ_START_ROW = 3
 
-# Mapowanie pol na kolumny w pliku Wykaz.xlsx.
+# Mapowanie pol na kolumny w pliku Wykaz.xlsx
 WYKAZ_KOLUMNY = {
     "nr_rej": 1,
     "rodzaj": 2,
@@ -34,7 +34,7 @@ WYKAZ_KOLUMNY = {
     "wartosc_pojazdu": 8,
 }
 
-# Mapowanie pol na kolumny w plikach eksportow.
+# Mapowanie pol na kolumny w plikach eksportow
 EXPORT_KOLUMNY = {
     "wartosc_pojazdu": 1,
     "nr_rej": 2,
@@ -71,7 +71,7 @@ def wczytaj_eksporty(folder=EXPORTS_DIR):
         print(f"Folder z eksportami nie istnieje: {folder}")
         return eksporty
 
-# Wczytuje wszystkie pliki .xlsx z folderu eksportow.
+# Wczytuje wszystkie pliki .xlsx z folderu eksportow
     for nazwa_pliku in sorted(os.listdir(folder)):
         if nazwa_pliku.startswith("~$"):
             continue
@@ -119,14 +119,14 @@ def drukuj_druga_kolumne(eksporty):
 
 
 def normalizuj_tekst(wartosc):
-# Ujednolica tekst do porownan, np. przy sprawdzaniu duplikatow.
+# Ujednolica tekst do porownan, np. przy sprawdzaniu duplikatow
     if wartosc is None:
         return ""
     return str(wartosc).strip().lower()
 
 
 def pierwsza_niepusta_wartosc(*wartosci):
-    # Zwraca pierwsza niepusta wartosc z podanych pol.
+    # Zwraca pierwsza niepusta wartosc z podanych pol
     for wartosc in wartosci:
         if wartosc is None:
             continue
@@ -142,16 +142,16 @@ def pobierz_pojazdy_z_eksportow(eksporty):
     for eksport in eksporty:
         ws = eksport["worksheet"]
 
-        # Pomija pierwsze dwa wiersze, bo zawieraja tytul i naglowki eksportu.
+        # Pomija pierwsze dwa wiersze, bo zawieraja tytul i naglowki eksportu
         for nr_wiersza, row in enumerate(ws.iter_rows(min_row=3, values_only=True), start=3):
             nr_rej = pierwsza_niepusta_wartosc(row[EXPORT_KOLUMNY["nr_rej"] - 1])
             vin = pierwsza_niepusta_wartosc(row[EXPORT_KOLUMNY["vin"] - 1])
 
-            # Jesli nie ma ani numeru rejestracyjnego, ani VIN-u, to rekord jest pusty.
+            # Jesli nie ma ani numeru rejestracyjnego, ani VIN-u, to rekord jest pusty
             if nr_rej is None and vin is None:
                 continue
 
-            # Buduje ujednolicony slownik danych pojazdu z eksportu.
+            # Buduje ujednolicony slownik danych pojazdu z eksportu
             pojazdy.append({
                 "nr_wiersza_eksport": nr_wiersza,
                 "plik": eksport["nazwa"],
@@ -177,7 +177,7 @@ def pobierz_istniejace_klucze_z_wykazu():
     numery_rej = set()
     viny = set()
 
-    # Zbiera istniejace numery rejestracyjne i VIN-y z wykazu do szybkiego porownania.
+    # Zbiera istniejace numery rejestracyjne i VIN-y z wykazu do szybkiego porownania
     for row in main_ws.iter_rows(min_row=WYKAZ_START_ROW, values_only=True):
         nr_rej = normalizuj_tekst(row[WYKAZ_KOLUMNY["nr_rej"] - 1])
         vin = normalizuj_tekst(row[WYKAZ_KOLUMNY["vin"] - 1])
@@ -191,7 +191,7 @@ def pobierz_istniejace_klucze_z_wykazu():
 
 
 def znajdz_pierwszy_pusty_wiersz(ws, start_row, kolumna_sprawdzana):
-    # Szuka pierwszego wolnego wiersza, gdzie mozna dopisac nowy pojazd.
+    # Szuka pierwszego wolnego wiersza, gdzie mozna dopisac nowy pojazd
     for nr_wiersza in range(start_row, ws.max_row + 2):
         wartosc = ws.cell(row=nr_wiersza, column=kolumna_sprawdzana).value
         if wartosc in (None, ""):
@@ -200,7 +200,7 @@ def znajdz_pierwszy_pusty_wiersz(ws, start_row, kolumna_sprawdzana):
 
 
 def dodaj_pojazdy_do_wykazu(eksporty):
-    # Pobiera dane z eksportow i aktualny stan wykazu.
+    # Pobiera dane z eksportow i aktualny stan wykazu
     pojazdy = pobierz_pojazdy_z_eksportow(eksporty)
     istniejące_numery_rej, istniejące_viny = pobierz_istniejace_klucze_z_wykazu()
     pierwszy_pusty_wiersz = znajdz_pierwszy_pusty_wiersz(
@@ -216,7 +216,7 @@ def dodaj_pojazdy_do_wykazu(eksporty):
         klucz_nr_rej = normalizuj_tekst(pojazd["nr_rej"])
         klucz_vin = normalizuj_tekst(pojazd["vin"])
 
-        # Rekord jest duplikatem, jesli numer rejestracyjny albo VIN juz istnieje w wykazie.
+        # Rekord jest duplikatem, jesli numer rejestracyjny albo VIN juz istnieje w wykazie
         duplikat_nr_rej = klucz_nr_rej and klucz_nr_rej in istniejące_numery_rej
         duplikat_vin = klucz_vin and klucz_vin in istniejące_viny
 
@@ -233,7 +233,7 @@ def dodaj_pojazdy_do_wykazu(eksporty):
             )
             continue
 
-        # Zapisuje nowy pojazd do odpowiednich kolumn w wykazie.
+        # Zapisuje nowy pojazd do odpowiednich kolumn w wykazie
         main_ws.cell(pierwszy_pusty_wiersz, WYKAZ_KOLUMNY["nr_rej"], pojazd["nr_rej"])
         main_ws.cell(pierwszy_pusty_wiersz, WYKAZ_KOLUMNY["rodzaj"], pojazd["rodzaj"])
         main_ws.cell(pierwszy_pusty_wiersz, WYKAZ_KOLUMNY["marka"], pojazd["marka"])
@@ -246,9 +246,10 @@ def dodaj_pojazdy_do_wykazu(eksporty):
             WYKAZ_KOLUMNY["wartosc_pojazdu"],
             pojazd["wartosc_pojazdu"],
         )
-
-        # Po dodaniu rekordu od razu dopisuje jego klucze do zbiorow,
-        # zeby nie dodac duplikatu z kolejnego pliku eksportu.
+        '''
+        Po dodaniu rekordu od razu dopisuje jego klucze do zbiorow
+        zeby nie dodac duplikatu z kolejnego pliku eksportu
+        '''
         if klucz_nr_rej:
             istniejące_numery_rej.add(klucz_nr_rej)
         if klucz_vin:
@@ -257,10 +258,11 @@ def dodaj_pojazdy_do_wykazu(eksporty):
         dodane.append((pierwszy_pusty_wiersz, pojazd["nr_rej"], pojazd["vin"]))
         pierwszy_pusty_wiersz += 1
 
-    # Zapisuje wszystkie zmiany do pliku Wykaz.xlsx.
-    main_wb.save(Wykaz)
+    final_path = przygotuj_sciezke_wynikowa()
+    main_wb.save(final_path)
 
     print(f"Dodano {len(dodane)} nowych pojazdow do wykazu.")
+    print(f"Zapisano nowy plik wynikowy: {final_path}")
     for nr_wiersza, nr_rej, vin in dodane:
         print(f"Wiersz {nr_wiersza}: nr rej={nr_rej}, VIN={vin}")
 
@@ -269,29 +271,16 @@ def dodaj_pojazdy_do_wykazu(eksporty):
         print(komunikat)
 
 
-'''
-Tworzy backup w foldrze Backup
-'''
-def backup():
-    oryginal = Wykaz
-    backup_dir = "Backup"
-
-    # Tworzy folder Backup, jesli jeszcze nie istnieje.
-    os.makedirs(backup_dir, exist_ok=True)
-
-    # Dodaje date i godzine do nazwy kopii zapasowej.
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    backup_path = os.path.join(backup_dir, f"Wykaz_backup_{timestamp}.xlsx")
-
-    shutil.copy2(oryginal, backup_path)
-
-    print("Backup zapisany:", backup_path)
+def przygotuj_sciezke_wynikowa():
+    # Tworzy folder Final i zwraca sciezke dla nowego pliku wynikowego
+    os.makedirs(FINAL_DIR, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M")
+    return os.path.join(FINAL_DIR, f"Wykaz_scalony_{timestamp}.xlsx")
 
 
 
 if __name__ == '__main__':
-    # Najpierw robi backup, potem wczytuje eksporty i dopisuje brakujace pojazdy.
-    backup()
+    # Wczytuje eksporty i zapisuje scalony wynik jako nowy plik w folderze Final
     eksporty = wczytaj_eksporty()
     print(f"Scalanie eksportow do pliku: {Wykaz}")
     dodaj_pojazdy_do_wykazu(eksporty)
